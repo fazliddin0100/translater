@@ -1,0 +1,27 @@
+# Core translation (Bosqich 0-1)
+ctranslate2>=4.4.0
+transformers>=4.40.0,<5.0
+sentencepiece>=0.2.0
+huggingface_hub>=0.23.0
+torch>=2.2.0
+
+# Optional: CUDA runtime DLLs for CT2 GPU on Windows (or install CUDA Toolkit 12.x)
+# nvidia-cublas-cu12
+# nvidia-cuda-runtime-cu12
+# nvidia-cudnn-cu12
+
+# File extraction (Bosqich 2+) — installed early for structure readiness
+python-docx>=1.1.0
+pymupdf>=1.24.0
+
+# Language / chunking (Bosqich 3+)
+langdetect>=1.0.9
+nltk>=3.8.0
+
+# CLI / UX (Bosqich 6+)
+tqdm>=4.66.0
+streamlit>=1.32.0
+
+# GPU speed (Windows): CUDA 12 runtime for CTranslate2
+nvidia-cublas-cu12>=12.4.0
+nvidia-cuda-runtime-cu12>=12.4.0
