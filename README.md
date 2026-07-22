@@ -2,7 +2,7 @@
 
 Kompyuterda internetsiz ishlaydigan **inglizcha va ruscha → o'zbekcha (lotin)** tarjimon dasturi.
 
-PDF yoki Word (`.docx`) faylni yuklaysiz — dastur matnni ajratadi, tarjima qiladi va natijani **Word (.docx)** qilib beradi.
+PDF yoki Word (`.docx`) faylni yuklaysiz — dastur matnni ajratadi, tarjima qiladi. **Standart: asl format** (PDF → PDF, rasmlar saqlanadi). Kerak bo‘lsa Word yoki PDF ni o‘zingiz tanlaysiz.
 
 ---
 
@@ -14,7 +14,9 @@ PDF yoki Word (`.docx`) faylni yuklaysiz — dastur matnni ajratadi, tarjima qil
 | Ruscha → o'zbekcha (lotin) | Ha |
 | Oddiy matn (terminal) | Ha |
 | Word (`.docx`) — format saqlanadi | Ha |
-| PDF kirish → Word chiqish | Ha |
+| PDF → PDF (rasmlar saqlanadi) | Ha |
+| PDF → Word (rasmlar ko‘chiriladi) | Ha (imkoni bo‘lsa) |
+| Format tanlash (auto / docx / pdf) | Ha |
 | Brauzer interfeysi (Streamlit) | Ha |
 | GPU orqali tezlashtirish (CUDA) | Ha (sozlanganda) |
 | Skaner / rasm PDF (OCR) | Yo'q (hozircha) |
@@ -23,12 +25,18 @@ PDF yoki Word (`.docx`) faylni yuklaysiz — dastur matnni ajratadi, tarjima qil
 
 ## Natija formati
 
-**Har doim Word (`.docx`).**
+**Standart: asl format (`auto`).**
 
-- PDF yuklasangiz ham
-- DOCX yuklasangiz ham
+| Kirish | Chiqish (auto) | Nima uchun |
+| --- | --- | --- |
+| PDF | PDF | Rasmlar, chizmalar o‘rinida qoladi |
+| Word | Word | Tahrirlash oson, format saqlanadi |
 
-Yuklab olinadigan fayl `.docx` bo'ladi. Keyin Microsoft Word da ochib tahrirlashingiz mumkin.
+Sidebar / CLI da formatni o‘zgartirish mumkin:
+
+- **Asl format** — tavsiya (PDF rasmlari yo‘qolmaydi)
+- **Word (.docx)** — PDF dan Word ga o‘tkazganda sahifa rasmlari ham ko‘chirilishga uriniladi
+- **PDF** — DOCX dan oddiy matnli PDF
 
 O'zbekcha apostrof (`o'zbek`) maxsus belgilari oddiy `'` ga normallashtiriladi — `?` ko'rinishi bartaraf etiladi.
 
@@ -96,9 +104,10 @@ Ochiladi: <http://localhost:8501>
 **Qanday ishlatiladi:**
 
 1. PDF yoki Word yuklang
-2. **1. Matnni ko'rish** — fayldan matn chiqishini tekshiring
-3. **2. Tarjima qilish** — to'liq tarjima (progress ko'rinadi)
-4. **3. Word (.docx) yuklab olish** — natijani saqlang
+2. Sidebar da **Yuklab olish formati** ni tanlang (standart: Asl format)
+3. **1. Matnni ko'rish** — fayldan matn chiqishini tekshiring
+4. **2. Tarjima qilish** — to'liq tarjima (progress ko'rinadi)
+5. **3. Natijani yuklab olish** — PDF yoki Word
 
 ### Yon panel sozlamalari
 
@@ -108,6 +117,7 @@ Ochiladi: <http://localhost:8501>
 | Qurilma: `cuda` | Majburiy GPU (tezroq) |
 | Qurilma: `cpu` | Faqat protsessor |
 | Manba til | Avto / Inglizcha / Ruscha |
+| Yuklab olish formati | Asl / Word / PDF (PDF da rasmlar saqlanadi) |
 | Batch hajmi | Bir vaqtda nechta jumla (katta = tezroq). Default: 32 |
 | Sifat / tezlik | **Tez** (`beam=1`) yoki **Yaxshiroq sifat** (`beam=4`) |
 
@@ -124,9 +134,12 @@ cd C:\d-disk\pdf-tarjimon\translator_app
 python main.py --text "Hello, how are you?" --source eng_Latn --device auto
 python main.py --text "Привет, как дела?" --source rus_Cyrl --device auto
 
-# Word / PDF → natija doim .docx
+# Word / PDF — asl format (PDF → PDF, rasmlar saqlanadi)
 python main.py --input samples\sample_en.docx --output outputs\natija.docx --device auto
-python main.py --input samples\sample_en.pdf --output outputs\natija.docx --device auto
+python main.py --input samples\sample_en.pdf --output outputs\natija.pdf --device auto
+
+# PDF ni majburiy Word ga (rasmlar ko‘chiriladi)
+python main.py --input samples\sample_en.pdf --output outputs\natija.docx --output-format docx --device auto
 
 # Interaktiv
 python main.py --interactive --device auto
@@ -135,6 +148,7 @@ python main.py --interactive --device auto
 **Foydali argumentlar:**
 
 - `--device auto|cuda|cpu`
+- `--output-format auto|docx|pdf` (default: `auto`)
 - `--batch-size 32` (default)
 - `--beam-size 1` (tez) yoki `4` (sifat)
 - `--source eng_Latn|rus_Cyrl|auto`
@@ -153,10 +167,10 @@ Fayl (PDF yoki DOCX)
 2) Barcha bo'laklarni NLLB bilan tarjima qilish
         |
         v
-3) Word (.docx) faylga yozish
+3) Tanlangan formatga yozish (auto = asl; PDF da rasmlar qoladi)
         |
         v
-Natija: *_uz.docx
+Natija: *_uz.pdf yoki *_uz.docx
 ```
 
 ### Model
@@ -205,7 +219,7 @@ translator_app/
 │   ├── pipeline.py        # extract → translate → write-back
 │   ├── translator/        # NLLB + CTranslate2
 │   ├── extractors/        # PDF/DOCX dan matn olish
-│   ├── writers/           # Tarjimani Word ga yozish
+│   ├── writers/           # PDF / Word ga yozish (rasmlar)
 │   └── utils/             # Til aniqlash, normalizatsiya
 └── tests/
 ```
@@ -215,10 +229,11 @@ translator_app/
 ## Cheklovlar va ogohlantirishlar
 
 1. **Skaner PDF** — rasmdagi matn o'qilmaydi (OCR yo'q). Avval matnli PDF/DOCX qiling.
-2. **PDF kirish** — matn Word ga o'tkaziladi (sahifa bo'yicha sarlavhalar bilan).
-3. **DOCX** — paragraf / jadval / header / footer qo'llab-quvvatlanadi.
-4. **Tarjima sifati** — NLLB-600M umumiy model; maxsus atamalar ba'zan xato chiqishi mumkin.
-5. **Birinchi ishga tushirish** — model yuklash 1–2 daqiqa olishi mumkin.
+2. **PDF chiqish** — matn almashtiriladi, rasmlar joyida qoladi (`auto` / `pdf`).
+3. **PDF → Word** — matn + imkoni bo‘lsa sahifa rasmlari Word ga ko‘chiriladi.
+4. **DOCX** — paragraf / jadval / header / footer qo'llab-quvvatlanadi.
+5. **Tarjima sifati** — NLLB-600M umumiy model; maxsus atamalar ba'zan xato chiqishi mumkin.
+6. **Birinchi ishga tushirish** — model yuklash 1–2 daqiqa olishi mumkin.
 
 ---
 
@@ -255,5 +270,5 @@ python -m tests.test_translator
 
 1. `.venv` ni faollashtiring
 2. `streamlit run app.py`
-3. Fayl yuklang → matnni ko'ring → tarjima qiling → **Word yuklab oling**
+3. Fayl yuklang → format tanlang → matnni ko'ring → tarjima qiling → **PDF/Word yuklab oling**
 4. Tezlik uchun: **Qurilma = auto/cuda**, **Batch = 32**, **Sifat/tezlik = Tez**

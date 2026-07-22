@@ -76,13 +76,14 @@ def translate_document(
     target_lang: str = DEFAULT_TARGET,
     device: str = "cpu",
     batch_size: int = 8,
+    output_format: str = "auto",
     progress: ProgressCb | None = None,
 ) -> tuple[Path, list[TextUnit]]:
     """
     Full pipeline:
       1) extract text (+ positions)
       2) translate all units
-      3) write translations back to original places
+      3) write back (PDF keeps images; format selectable)
     """
     input_path = Path(input_path)
     if not input_path.exists():
@@ -92,10 +93,18 @@ def translate_document(
     if suffix not in {".docx", ".pdf"}:
         raise ValueError("Faqat .docx va .pdf qo'llab-quvvatlanadi")
 
-    if output_path is None:
-        output_path = input_path.with_name(f"{input_path.stem}_uz.docx")
+    fmt = (output_format or "auto").lower()
+    if fmt == "auto":
+        ext = suffix
+    elif fmt in {"docx", "pdf"}:
+        ext = f".{fmt}"
     else:
-        output_path = Path(output_path).with_suffix(".docx")
+        raise ValueError("output_format: auto | docx | pdf")
+
+    if output_path is None:
+        output_path = input_path.with_name(f"{input_path.stem}_uz{ext}")
+    else:
+        output_path = Path(output_path).with_suffix(ext)
 
     if engine is None:
         if progress:
@@ -111,7 +120,6 @@ def translate_document(
             "(OCR kerak) yoki fayl bo'sh."
         )
 
-    # Pin language if auto and document is clearly one language
     src = source_lang
     if src in (None, "auto"):
         src = detect_document_source([u.text for u in units[:50]])
@@ -128,17 +136,8 @@ def translate_document(
     )
 
     if progress:
-        progress(0, 1, "3/3 Word (.docx) faylga yozilmoqda…")
-    out = write_document(input_path, output_path, units)
+        progress(0, 1, f"3/3 {ext} faylga yozilmoqda…")
+    out = write_document(input_path, output_path, units, output_format=fmt)
     if progress:
-        progress(1, 1, "Tayyor (Word)")
+        progress(1, 1, f"Tayyor ({out.suffix})")
     return out, units
-
-
-# Back-compat helpers used elsewhere
-def collect_docx_texts(path: Path | str) -> list[str]:
-    return [u.text for u in extract_document(path) if Path(path).suffix.lower() == ".docx"]
-
-
-def collect_pdf_texts(path: Path | str) -> list[str]:
-    return [u.text for u in extract_document(path) if Path(path).suffix.lower() == ".pdf"]

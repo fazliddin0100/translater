@@ -53,6 +53,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=1,
         help="1 = tez (greedy), 4 = sifatliroq lekin sekin",
     )
+    parser.add_argument(
+        "--output-format",
+        choices=["auto", "docx", "pdf"],
+        default="auto",
+        help="auto = asl format (PDF rasmlari saqlanadi); docx/pdf = majburiy format",
+    )
     parser.add_argument("--interactive", "-i", action="store_true")
     parser.add_argument(
         "--file",
@@ -116,6 +122,7 @@ def main(argv: list[str] | None = None) -> int:
             target_lang=args.target,
             device=args.device,
             batch_size=args.batch_size,
+            output_format=args.output_format,
             progress=progress,
         )
         print(f"Saqlandi: {out}")
